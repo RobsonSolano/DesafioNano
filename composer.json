@@ -1,9 +1,9 @@
 {
-    "name": "hcodebr/ecommerce",
+    "name": "RobsonSolano/E-commerce",
     "authors": [
         {
-            "name": "Hcode Treinamentos",
-            "email": "suporte@hcode.com.br"
+            "name": "Robson Solano",
+            "email": "robson.b.solano@hotmail.com"
         }
     ],
     "require": {
