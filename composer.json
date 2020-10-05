@@ -1,19 +1,17 @@
 {
-    "name": "RobsonSolano/E-commerce",
-    "authors": [
-        {
-            "name": "Robson Solano",
-            "email": "robson.b.solano@hotmail.com"
-        }
-    ],
+    "name": "robsonsolano/desafio",
+    "authors": [{
+        "name": "Robson Solano",
+        "email": "robson.b.solano@hotmail.com"
+    }],
     "require": {
-    	"phpmailer/phpmailer":"5.2.22",
-    	"slim/slim":"2.0",
-    	"rain/raintpl":"3.0.0"
+        "phpmailer/phpmailer": "5.2.22",
+        "slim/slim": "2.0",
+        "rain/raintpl": "3.0.0"
     },
     "autoload": {
         "psr-4": {
-            "Hcode\\": "vendor\\hcodebr\\php-classes\\src"
+            "Challenge\\": "vendor\\challenge\\php-classes\\src"
         }
     }
 }

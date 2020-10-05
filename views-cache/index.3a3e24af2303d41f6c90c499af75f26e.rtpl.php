@@ -1,4 +1,4 @@
-<div class="content-wrapper">
+<?php if(!class_exists('Rain\Tpl')){exit;}?><div class="content-wrapper">
     <!-- Cabeçalho desse conteúdo -->
     <section class="content-header">
         <h1>

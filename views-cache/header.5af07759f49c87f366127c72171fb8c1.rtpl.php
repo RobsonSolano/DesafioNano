@@ -7,12 +7,13 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hcode Store</title>
+    <title>Aprume Elegance</title>
     
     <!-- Google Fonts -->
     <link href='http://fonts.googleapis.com/css?family=Titillium+Web:400,200,300,700,600' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Raleway:400,100' rel='stylesheet' type='text/css'>
+    <link rel="shortcut icon" href="/res/site/img/md2.png" type="image/x-ico" title="Aprume Elegance"/>
     
     <!-- Bootstrap -->
     <link rel="stylesheet" href="/res/site/css/bootstrap.min.css">
@@ -40,16 +41,16 @@
                 <div class="col-md-8">
                     <div class="user-menu">
                         <ul>
-                            <li><a href="/profile"><i class="fa fa-user"></i> Minha Conta</a></li>
-                            <li><a href="#"><i class="fa fa-heart"></i> Lista de Desejos</a></li>
-                            <li><a href="/cart"><i class="fa fa-shopping-cart"></i> Meu Carrinho</a></li>
+                            <li><a href="/profile"><i class="fa fa-user bg-white"></i> Minha Conta</a></li>
+                            <li><a href="#"><i class="fa fa-heart bg-white"></i> Lista de Desejos</a></li>
+                            <li><a href="/cart"><i class="fa fa-shopping-cart bg-white"></i> Meu Carrinho</a></li>
                             <?php if( checkLogin(false) ){ ?>
 
-                            <li><a href="/profile"><i class="fa fa-user"></i> <?php echo getUserName(); ?></a></li>
-                            <li><a href="/logout"><i class="fa fa-close"></i> Sair</a></li>
+                            <li><a href="/profile"><i class="fa fa-user bg-white"></i> <?php echo getUserName(); ?></a></li>
+                            <li><a href="/logout"><i class="fa fa-close bg-white"></i> Sair</a></li>
                             <?php }else{ ?>
 
-                            <li><a href="/login"><i class="fa fa-lock"></i> Login</a></li>
+                            <li><a href="/login"><i class="fa fa-lock bg-white"></i> Login</a></li>
                             <?php } ?>
 
                         </ul>
@@ -85,15 +86,15 @@
     <div class="site-branding-area">
         <div class="container">
             <div class="row">
-                <div class="col-sm-6">
+                <div class="col-sm-6 text-center">
                     <div class="logo">
-                        <h1><a href="/"><img src="/res/site/img/logo.png"></a></h1>
+                        <h1><a href="/"><img src="/res/site/img/md2.png" width="120px" title="Aprume Elegance"/></a></h1>
                     </div>
                 </div>
                 
                 <div class="col-sm-6">
                     <div class="shopping-item">
-                        <a href="/cart">Carrinho - <span class="cart-amunt">R$<?php echo getCartVlSubTotal(); ?></span> <i class="fa fa-shopping-cart"></i> <span class="product-count"><?php echo getCartNrQtd(); ?></span></a>
+                        <a href="/cart">Carrinho - <span class="cart-amunt">R$ <?php echo getCartVlSubTotal(); ?></span> <i class="fa fa-shopping-cart"></i> <span class="product-count"><?php echo getCartNrQtd(); ?></span></a>
                     </div>
                 </div>
             </div>
@@ -114,7 +115,7 @@
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="/">Home</a></li>
-                        <li><a href="#">Produtos</a></li>
+                        <li><a href="/products">Produtos</a></li>
                         <li><a href="/cart">Carrinho</a></li>
                     </ul>
                 </div>  

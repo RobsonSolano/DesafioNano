@@ -7,16 +7,16 @@ namespace Composer\Autoload;
 class ComposerStaticInit0b968f58b727f4815ecdee809cf66ddd
 {
     public static $prefixLengthsPsr4 = array (
-        'H' => 
+        'C' => 
         array (
-            'Hcode\\' => 6,
+            'Challenge\\' => 10,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Hcode\\' => 
+        'Challenge\\' => 
         array (
-            0 => __DIR__ . '/..' . '/hcodebr/php-classes/src',
+            0 => __DIR__ . '/..' . '/challenge/php-classes/src',
         ),
     );
 
