@@ -1,16 +1,14 @@
-<?php 
+<?php
 
-namespace Hcode\Model;
+namespace Challenge\Model;
 
-use \Hcode\DB\Sql;
-use \Hcode\Model;
-use \Hcode\Mailer;
+use \Challenge\DB\Sql;
+use \Challenge\Model;
+use \Challenge\Mailer;
 
-class User extends Model {
-
-	const SESSION = "User";
-	const SECRET = "HcodePhp7_Secret";
-	const SECRET_IV = "HcodePhp7_Secret_IV";
+class User extends Model
+{
+	const SESSION = "";
 	const ERROR = "UserError";
 	const ERROR_REGISTER = "UserErrorRegister";
 	const SUCCESS = "UserSucesss";
@@ -20,105 +18,158 @@ class User extends Model {
 
 		$user = new User();
 
-		if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0) {
+		if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['id'] > 0) {
 
 			$user->setData($_SESSION[User::SESSION]);
-
 		}
 
 		return $user;
-
 	}
 
-	public static function checkLogin($inadmin = true)
+	public static function getTotFuncs(){
+		$sql = new Sql();
+
+		$results = $sql->select("SELECT * FROM tb_funcionario");
+
+		return count($results);
+	}
+
+	public static function getTotEntradas(){
+		$sql = new Sql();
+
+		$results = $sql->select("SELECT * FROM tb_movimentacao WHERE tipo_movimentacao = 'entrada'");
+
+		return count($results);
+	}
+
+	public static function getTotSaidas(){
+		$sql = new Sql();
+
+		$results = $sql->select("SELECT * FROM tb_movimentacao WHERE tipo_movimentacao = 'saida'");
+
+		return count($results);
+	}
+
+	public function cadMovimentacao($idfunc)
 	{
+		$sql = new Sql();
+		
+		$results = $sql->query("INSERT INTO tb_movimentacao (tipo_movimentacao, valor, observacao, funcionario_id, administrador_id) VALUES (:tipo_movimentacao,:valor,:observacao,:funcionario_id,:administrador_id)",array(
+			":tipo_movimentacao" => $this->gettipo_movimentacao(),
+			":valor" => $this->getvalor(),
+			":observacao" => $this->getobservacao(),
+			":funcionario_id" => $this->getfuncionario_id(),
+			":administrador_id" => $this->getadministrador_id()
+		));
 
-		if (
-			!isset($_SESSION[User::SESSION])
-			||
-			!$_SESSION[User::SESSION]
-			||
-			!(int)$_SESSION[User::SESSION]["iduser"] > 0
-		) {
-			//Não está logado
-			return false;
+		if($this->gettipo_movimentacao() == "entrada"){
 
-		} else {
+			$results = $sql->select("SELECT saldo_atual FROM tb_funcionario WHERE id = :id", array(
+				":id" => $idfunc
+			));
 
-			if ($inadmin === true && (bool)$_SESSION[User::SESSION]['inadmin'] === true) {
+			$user = new User();
 
-				return true;
+			$Saldo = $results[0]['saldo_atual'];
+			
+			$moviADD = number_format($this->getvalor(),2,'.',',');
 
-			} else if ($inadmin === false) {
+			$user->addToSaldo($Saldo,$moviADD, $idfunc);
 
-				return true;
+		}else{
+			$results = $sql->select("SELECT saldo_atual FROM tb_funcionario WHERE id = :id", array(
+				":id" => $idfunc
+			));
 
-			} else {
+			$user = new User();
 
-				return false;
+			$Saldo = $results[0]['saldo_atual'];
+			
+			$moviADD = number_format($this->getvalor(),2,'.',',');
 
-			}
-
+			$user->removeToSaldo($Saldo,$moviADD, $idfunc);
 		}
 
+		return $results;
 	}
 
-	public static function login($login, $password)
+	public function addToSaldo($saldo, $movimentacao,$idfunc){
+
+		settype($movimentacao, "float");
+
+		$saldo_atual = str_replace(',','',$saldo);
+
+		settype($saldo_atual, "float");
+
+		$carteira = $saldo_atual + $movimentacao;
+
+		$sql = new Sql();
+
+		$data = $sql->query("UPDATE tb_funcionario SET saldo_atual = :saldo WHERE id = :id",array(
+			":saldo" => $carteira,
+			"id" => $idfunc
+		));
+
+		return $data;
+
+	}
+
+	public function removeToSaldo($saldo, $movimentacao, $idfunc){
+
+		settype($movimentacao, "float");
+
+		$saldo_atual = str_replace(',','',$saldo);
+
+		settype($saldo_atual, "float");
+
+		$carteira = $saldo_atual - $movimentacao;
+
+		$sql = new Sql();
+
+		$data = $sql->query("UPDATE tb_funcionario SET saldo_atual = :saldo WHERE id = :id",array(
+			":saldo" => $carteira,
+			"id" => $idfunc
+		));
+
+		return $data;
+
+	}
+
+	public function login($login, $password)
 	{
 
 		$sql = new Sql();
 
-		$results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b ON a.idperson = b.idperson WHERE a.deslogin = :LOGIN", array(
-			":LOGIN"=>$login
-		)); 
+		$results = $sql->select("SELECT * FROM tb_administrador WHERE login = :login AND senha = :senha", array(
+			":login" => $login,
+			":senha" => $password
+		));
 
-		if (count($results) === 0)
-		{
+		if (count($results) === 0) {
 			throw new \Exception("Usuário inexistente ou senha inválida.");
 		}
 
 		$data = $results[0];
 
-		if (password_verify($password, $data["despassword"]) === true)
-		{
+		$user = new User();
 
-			$user = new User();
+		$data['nome_completo'] = utf8_encode($data['nome_completo']);
 
-			$data['desperson'] = utf8_encode($data['desperson']);
+		$user->setData($data);
 
-			$user->setData($data);
+		$_SESSION[User::SESSION] = $user->getValues();
 
-			$_SESSION[User::SESSION] = $user->getValues();
+		$_SESSION['nome_completo'] = $user->getnome_completo();
+		$_SESSION['id'] = $user->getid();
 
-			return $user;
-
-		} else {
-			throw new \Exception("Usuário inexistente ou senha inválida.");
-		}
-
-	}
-
-	public static function verifyLogin($inadmin = true)
-	{
-
-		if (!User::checkLogin($inadmin)) {
-
-			if ($inadmin) {
-				header("Location: /admin/login");
-			} else {
-				header("Location: /login");
-			}
-			exit;
-
-		}
-
+		return $user;
 	}
 
 	public static function logout()
 	{
 
 		$_SESSION[User::SESSION] = NULL;
-
+		session_destroy();
 	}
 
 	public static function listAll()
@@ -126,26 +177,58 @@ class User extends Model {
 
 		$sql = new Sql();
 
-		return $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY b.desperson");
-
+		return $sql->select("SELECT * FROM tb_funcionario ORDER BY data_criacao DESC");
 	}
 
-	public function save()
+	public static function verifyLogin()
+	{	
+		if(!isset($_SESSION['id']) || $_SESSION['id'] == ""){
+			header("Location: /admin/login");
+			exit;
+		}
+
+	}
+	
+	public function getInfoAdmin($idadmin)
+	{
+		$sql = new Sql();
+
+		$results = $sql->select("SELECT * FROM tb_administrador WHERE id = :id", array(
+			":id" => $idadmin
+		));
+
+		return $this->setData($results[0]);
+	}
+
+	public function cadFuncionario()
 	{
 
 		$sql = new Sql();
 
-		$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-			":desperson"=>utf8_decode($this->getdesperson()),
-			":deslogin"=>$this->getdeslogin(),
-			":despassword"=>User::getPasswordHash($this->getdespassword()),
-			":desemail"=>$this->getdesemail(),
-			":nrphone"=>$this->getnrphone(),
-			":inadmin"=>$this->getinadmin()
+		// 	echo json_encode($_POST);
+		$results = $sql->select("INSERT INTO tb_funcionario (nome_completo,login,senha,saldo_atual,administrador_id) VALUES (:fullname, :login, :senha , :saldoAtual , :adminId)", array(
+			":fullname" => $this->getnome_completo(),
+			":login" => $this->getlogin(),
+			":senha" => md5($this->getsenha()),
+			":saldoAtual" => $this->getsaldo_atual(),
+			":adminId" => $_SESSION['id']
 		));
 
-		$this->setData($results[0]);
+		return true;
+	}
 
+	public function saveAdmin($fullname, $login, $password)
+	{
+
+		$sql = new Sql();
+
+		$results = $sql->query("INSERT INTO tb_administrador (nome_completo,login,senha) VALUES (:fullname,:login,:senha)", array(
+			":fullname" => $fullname,
+			":login" => $login,
+			":senha" => $password
+		));
+
+		return true;
 	}
 
 	public function get($iduser)
@@ -153,176 +236,143 @@ class User extends Model {
 
 		$sql = new Sql();
 
-		$results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser = :iduser", array(
-			":iduser"=>$iduser
+		$results = $sql->select("SELECT * FROM tb_funcionario WHERE id = :id", array(
+			":id" => $iduser
 		));
 
 		$data = $results[0];
 
-		$data['desperson'] = utf8_encode($data['desperson']);
+		$data['nome_completo'] = utf8_encode($data['nome_completo']);
 
 
 		$this->setData($data);
-
 	}
 
-	public function update()
+	public function update($idfunc)
 	{
 
 		$sql = new Sql();
 
-		$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-			":iduser"=>$this->getiduser(),
-			":desperson"=>utf8_decode($this->getdesperson()),
-			":deslogin"=>$this->getdeslogin(),
-			":despassword"=>User::getPasswordHash($this->getdespassword()),
-			":desemail"=>$this->getdesemail(),
-			":nrphone"=>$this->getnrphone(),
-			":inadmin"=>$this->getinadmin()
+		date_default_timezone_set('America/Sao_Paulo');
+		$dataLocal = date('Y/m/d H:i:s', time());
+
+		$results = $sql->select("CALL sp_update_save(:idfunc, :nome_completo,:login,:saldo_atual, :dataUpdate)", array(
+			":idfunc" => $idfunc,
+			":nome_completo" => utf8_decode($this->getnome_completo()),
+			":login" => $this->getlogin(),
+			":saldo_atual" => $this->getsaldo_atual(),
+			":dataUpdate" => $dataLocal
 		));
 
-		$this->setData($results[0]);		
-
+		return $results;
 	}
 
-	public function delete()
+	public static function delete($idfunc)
 	{
 
 		$sql = new Sql();
 
-		$sql->query("CALL sp_users_delete(:iduser)", array(
-			":iduser"=>$this->getiduser()
+		$sql->query("DELETE FROM tb_funcionario WHERE id = :idfunc", array(
+			":idfunc" => $idfunc
 		));
 
+		return true;
 	}
 
-	public static function getForgot($email, $inadmin = true)
+	public function getExtratos($idfunc)
 	{
-
 		$sql = new Sql();
 
-		$results = $sql->select("
-			SELECT *
-			FROM tb_persons a
-			INNER JOIN tb_users b USING(idperson)
-			WHERE a.desemail = :email;
-		", array(
-			":email"=>$email
+		$results = $sql->select("SELECT * FROM tb_movimentacao WHERE funcionario_id = :ID", array(
+			":ID" => $idfunc
 		));
 
-		if (count($results) === 0)
-		{
-
-			throw new \Exception("Não foi possível recuperar a senha.");
-
+		if (count($results) > 0) {
+			$this->setData($results[0]);
+		} else {
+			User::setError("Nenhuma movimentacao encontrada");
 		}
-		else
-		{
-
-			$data = $results[0];
-
-			$results2 = $sql->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(
-				":iduser"=>$data['iduser'],
-				":desip"=>$_SERVER['REMOTE_ADDR']
-			));
-
-			if (count($results2) === 0)
-			{
-
-				throw new \Exception("Não foi possível recuperar a senha.");
-
-			}
-			else
-			{
-
-				$dataRecovery = $results2[0];
-
-				$code = openssl_encrypt($dataRecovery['idrecovery'], 'AES-128-CBC', pack("a16", User::SECRET), 0, pack("a16", User::SECRET_IV));
-
-				$code = base64_encode($code);
-
-				if ($inadmin === true) {
-
-					$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
-
-				} else {
-
-					$link = "http://www.hcodecommerce.com.br/forgot/reset?code=$code";
-					
-				}				
-
-				$mailer = new Mailer($data['desemail'], $data['desperson'], "Redefinir senha da Hcode Store", "forgot", array(
-					"name"=>$data['desperson'],
-					"link"=>$link
-				));				
-
-				$mailer->send();
-
-				return $link;
-
-			}
-
-		}
-
 	}
 
-	public static function validForgotDecrypt($code)
+	public static function getPageExtractFromId($page = 1, $idfunc, $itemsPerPage = 5)
 	{
 
-		$code = base64_decode($code);
-
-		$idrecovery = openssl_decrypt($code, 'AES-128-CBC', pack("a16", User::SECRET), 0, pack("a16", User::SECRET_IV));
+		$start = ($page - 1) * $itemsPerPage;
 
 		$sql = new Sql();
 
-		$results = $sql->select("
-			SELECT *
-			FROM tb_userspasswordsrecoveries a
-			INNER JOIN tb_users b USING(iduser)
-			INNER JOIN tb_persons c USING(idperson)
-			WHERE
-				a.idrecovery = :idrecovery
-				AND
-				a.dtrecovery IS NULL
-				AND
-				DATE_ADD(a.dtregister, INTERVAL 1 HOUR) >= NOW();
-		", array(
-			":idrecovery"=>$idrecovery
-		));
+		$results = $sql->select("SELECT SQL_CALC_FOUND_ROWS 
+		a.tipo_movimentacao, a.valor, a.observacao, a.funcionario_id, a.administrador_id, a.data_criacao, b.id, b.nome_completo, c.id
+		FROM tb_movimentacao AS a
+		INNER JOIN tb_funcionario AS b
+		INNER JOIN tb_administrador AS c
+        WHERE a.funcionario_id = $idfunc AND b.id = $idfunc
+		ORDER BY data_criacao
+		LIMIT $start, $itemsPerPage;");
 
-		if (count($results) === 0)
-		{
-			throw new \Exception("Não foi possível recuperar a senha.");
-		}
-		else
-		{
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
 
-			return $results[0];
-
-		}
-
+		return [
+			'data' => $results,
+			'total' => (int)$resultTotal[0]["nrtotal"],
+			'pages' => ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+		];
 	}
-	
-	public static function setFogotUsed($idrecovery)
+
+	public static function getPageExtract($page = 1, $itemsPerPage = 5)
 	{
+
+		$start = ($page - 1) * $itemsPerPage;
 
 		$sql = new Sql();
 
-		$sql->query("UPDATE tb_userspasswordsrecoveries SET dtrecovery = NOW() WHERE idrecovery = :idrecovery", array(
-			":idrecovery"=>$idrecovery
-		));
+		$results = $sql->select("SELECT SQL_CALC_FOUND_ROWS 
+		a.tipo_movimentacao, a.valor, a.observacao, a.funcionario_id, a.administrador_id, a.data_criacao, b.id, b.nome_completo, c.id
+		FROM tb_movimentacao AS a
+		INNER JOIN tb_funcionario AS b
+		INNER JOIN tb_administrador AS c
+        WHERE a.funcionario_id = b.id AND a.administrador_id = c.id
+		ORDER BY a.data_criacao
+		LIMIT $start, $itemsPerPage;");
 
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+		return [
+			'data' => $results,
+			'total' => (int)$resultTotal[0]["nrtotal"],
+			'pages' => ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+		];
 	}
 
-	public function setPassword($password)
+	public static function getPageExtractSearch($tipo,$nome,$data, $page = 1, $itemsPerPage = 5)
 	{
+
+		$start = ($page - 1) * $itemsPerPage;
 
 		$sql = new Sql();
 
-		$sql->query("UPDATE tb_users SET despassword = :password WHERE iduser = :iduser", array(
-			":password"=>$password,
-			":iduser"=>$this->getiduser()
+		$results = $sql->select("SELECT SQL_CALC_FOUND_ROWS 
+		a.tipo_movimentacao, a.valor, a.observacao, a.funcionario_id, a.administrador_id, a.data_criacao, b.id, b.nome_completo, c.id
+		FROM tb_movimentacao AS a
+		INNER JOIN tb_funcionario AS b
+		INNER JOIN tb_administrador AS c
+        ON a.funcionario_id = b.id AND a.administrador_id = c.id
+		WHERE  a.tipo_movimentacao LIKE :tipo AND b.nome_completo LIKE :nome AND a.data_criacao LIKE :data
+		ORDER BY a.data_criacao
+		LIMIT $start, $itemsPerPage;
+		",array(
+			":tipo" => $tipo,
+			":nome" => '%'.$nome.'%',
+			":data" => '%'.$data.'%'
 		));
+
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+		return [
+			'data'=>$results,
+			'total'=>(int)$resultTotal[0]["nrtotal"],
+			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+		];
 
 	}
 
@@ -330,7 +380,6 @@ class User extends Model {
 	{
 
 		$_SESSION[User::ERROR] = $msg;
-
 	}
 
 	public static function getError()
@@ -341,21 +390,18 @@ class User extends Model {
 		User::clearError();
 
 		return $msg;
-
 	}
 
 	public static function clearError()
 	{
 
 		$_SESSION[User::ERROR] = NULL;
-
 	}
 
 	public static function setSuccess($msg)
 	{
 
 		$_SESSION[User::SUCCESS] = $msg;
-
 	}
 
 	public static function getSuccess()
@@ -366,21 +412,18 @@ class User extends Model {
 		User::clearSuccess();
 
 		return $msg;
-
 	}
 
 	public static function clearSuccess()
 	{
 
 		$_SESSION[User::SUCCESS] = NULL;
-
 	}
 
 	public static function setErrorRegister($msg)
 	{
 
 		$_SESSION[User::ERROR_REGISTER] = $msg;
-
 	}
 
 	public static function getErrorRegister()
@@ -391,60 +434,15 @@ class User extends Model {
 		User::clearErrorRegister();
 
 		return $msg;
-
 	}
 
 	public static function clearErrorRegister()
 	{
 
 		$_SESSION[User::ERROR_REGISTER] = NULL;
-
 	}
 
-	public static function checkLoginExist($login)
-	{
-
-		$sql = new Sql();
-
-		$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :deslogin", [
-			':deslogin'=>$login
-		]);
-
-		return (count($results) > 0);
-
-	}
-
-	public static function getPasswordHash($password)
-	{
-
-		return password_hash($password, PASSWORD_DEFAULT, [
-			'cost'=>12
-		]);
-
-	}
-
-	public function getOrders()
-	{
-
-		$sql = new Sql();
-
-		$results = $sql->select("SELECT * 
-			FROM tb_orders a 
-			INNER JOIN tb_ordersstatus AS b USING(idstatus) 
-			INNER JOIN tb_carts AS c USING(idcart)
-			INNER JOIN tb_users AS d ON d.iduser = a.iduser
-			INNER JOIN tb_addresses AS e USING(idaddress)
-			INNER JOIN tb_persons AS f ON f.idperson = d.idperson
-			WHERE a.iduser = :iduser
-		", [
-			':iduser'=>$this->getiduser()
-		]);
-
-		return $results;
-
-	}
-
-	public static function getPage($page = 1, $itemsPerPage = 10)
+	public static function getPage($page = 1, $itemsPerPage = 5)
 	{
 
 		$start = ($page - 1) * $itemsPerPage;
@@ -452,23 +450,21 @@ class User extends Model {
 		$sql = new Sql();
 
 		$results = $sql->select("SELECT SQL_CALC_FOUND_ROWS *
-			FROM tb_users a 
-			INNER JOIN tb_persons b USING(idperson) 
-			ORDER BY b.desperson
+			FROM tb_funcionario  
+			ORDER BY data_criacao
 			LIMIT $start, $itemsPerPage;
 		");
 
 		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
 
 		return [
-			'data'=>$results,
-			'total'=>(int)$resultTotal[0]["nrtotal"],
-			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+			'data' => $results,
+			'total' => (int)$resultTotal[0]["nrtotal"],
+			'pages' => ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
 		];
-
 	}
 
-	public static function getPageSearch($search, $page = 1, $itemsPerPage = 10)
+	public static function getPageSearch($search,$data ,$page = 1, $itemsPerPage = 5)
 	{
 
 		$start = ($page - 1) * $itemsPerPage;
@@ -476,25 +472,21 @@ class User extends Model {
 		$sql = new Sql();
 
 		$results = $sql->select("SELECT SQL_CALC_FOUND_ROWS *
-			FROM tb_users a 
-			INNER JOIN tb_persons b USING(idperson)
-			WHERE b.desperson LIKE :search OR b.desemail = :search OR a.deslogin LIKE :search
-			ORDER BY b.desperson
+			FROM tb_funcionario
+			WHERE nome_completo LIKE :search AND data_criacao LIKE :data_criacao
+			ORDER BY data_criacao
 			LIMIT $start, $itemsPerPage;
-		", [
-			':search'=>'%'.$search.'%'
-		]);
+		", array(
+			":search" => '%' . $search . '%',
+			":data_criacao" => '%' . $data . '%'
+		));
 
 		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
 
 		return [
-			'data'=>$results,
-			'total'=>(int)$resultTotal[0]["nrtotal"],
-			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+			'data' => $results,
+			'total' => (int)$resultTotal[0]["nrtotal"],
+			'pages' => ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
 		];
-
-	} 
-
+	}
 }
-
- ?>

@@ -1,0 +1,40 @@
+<div class="container-fluid">
+    <div class="row d-flex justify-content-center my-3">
+        <div class="col-md-8 col-12 text-center border-bottom">
+            <h4>Listagem de movimentação</h4>
+        </div>
+    </div>
+    <div class="row d-flex justify-content-center mt-2 mb-5">
+        <div class="col-12 col-md-8 col-lg-6 d-flex justify-content-center">
+            <a href="/admin/extract/create/{$id_func}" class="btn btn-success mb-2">Cadastrar
+                movimentação</a>
+        </div>
+        <div class="col-12 col-md-10">
+            <table class="table p-2 m-0">
+                <thead class="bg-light text-dark rounded-top">
+                    <tr>
+                        <th>id</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Funcionário</th>
+                        <th>Observação</th>
+                        <th>Data de criação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop="$extract"}
+                    <tr>
+                        <td>{$value.id}</td>
+                        <td>{$value.tipo_movimentacao}</td>
+                        <td>R$ {function="formatPrice($value.valor)"}</td>
+                        <td>{$value.observacao}</td>
+                        <td>{$value.nome_completo}</td>
+                        <td>{$value.data_criacao}</td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
