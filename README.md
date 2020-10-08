@@ -19,7 +19,7 @@ Instruções do projeto
 4.2 - Ao clicar no menu, você terá as opções: Nome do administrador (Pego através do login), Funcionários e Movimentações
 4.3 - Ao clicar em Nome do administrador, você pode acessar o perfil para ver as informações do administrador ou Sair (Logout)
 
-5 - Funcionários
+5 - Funcionários<br>
 5.1 - Ao clicar em Funcionários, será exibido todos os funcionários cadastrados do banco
 5.2 - Para cada funcionário, existe 3 botões, Editar, Extrato, Excluir
 5.3 - Ao clicar em Editar, será exibido as informações do funcionário selecionado, podendo alterar as informações e salvar
