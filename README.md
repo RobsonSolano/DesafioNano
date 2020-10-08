@@ -1,8 +1,22 @@
 # Projeto Desafio Nano, 2º etapa processo seletivo.
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Challenge_Logo.png" width="50px"/>
+<img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Challenge_Logo.png" width="80px"/>
 
-O presente projeto foi desenvolvido utilizando: HTML5, CSS3, PHP7, PDO, DAO, Javascript, Bootstrap 4, Slim, Rain e chart.js
+O presente projeto foi desenvolvido utilizando: 
+
+<ul type="circle">
+  <li>HTML5</li> 
+  <li>CSS3</li>
+  <li>PHP7</li>
+  <li>PDO</li>
+  <li>DAO</li>
+  <li>JavaScript</li>
+  <li>Bootstrap 4</li>
+  <li>Slim</li>
+  <li>Rain</li>
+  <li>chart.js</li>
+</ul>
+
 
 <h4>Instruções do projeto</h4
 
