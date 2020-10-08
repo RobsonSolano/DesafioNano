@@ -10,23 +10,30 @@
                     <div class="box-header with-border mt-2 text-center">
                         <h3 class="box-title text-secondary border-bottom">Novo Usuário</h3>
                     </div>
+                    {if="$msgError != ''"}
+                    <div class="alert alert-danger  alert-dismisseble" role="alert">
+                        <button class="close" type="button" data-dismiss="alert">
+                        &times;
+                    </button> {$msgError}
+                    </div>
+                    {/if}
                     <form role="form" action="/admin/funcionario/create/" method="post">
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="nome_completo">Nome</label>
-                                <input type="text" class="form-control" id="nome_completo" name="nome_completo" placeholder="Digite o nome">
+                                <input type="text" class="form-control" id="nome_completo" required name="nome_completo" placeholder="Digite o nome">
                             </div>
                             <div class="form-group">
                                 <label for="login">Login</label>
-                                <input type="email" class="form-control" id="login" name="login" placeholder="Digite o e-mail">
+                                <input type="email" class="form-control" id="login" required name="login" placeholder="Digite o e-mail">
                             </div>
                             <div class="form-group">
                                 <label for="senha">Senha</label>
-                                <input type="password" class="form-control" id="senha" name="senha" placeholder="Digite a senha">
+                                <input type="password" class="form-control" id="senha" required name="senha" placeholder="Digite a senha">
                             </div>
                             <div class="form-group">
                                 <label for="saldo_atual">Saldo Atual</label>
-                                <input type="number" class="form-control" id="saldo_atual" min="0" name="saldo_atual" placeholder="Digite o saldo atual">
+                                <input type="number" class="form-control" required id="saldo_atual" min="0" name="saldo_atual" placeholder="Digite o saldo atual">
                             </div>
                         </div>
                         <!-- /.box-body -->

@@ -3,19 +3,25 @@ session_start();
 require_once("vendor/autoload.php");
 require_once("functions.php");
 
-$app = new Slim\Slim();
+$app = new Slim\Slim(); // Instância da classe SLIM
 
 use \Challenge\PageAdmin;
 use \Challenge\Model\User;
 
-$app->config('debug', true);
+$app->config('debug', true); //Habilita verificação de erros
+
+// Rota inícial
 
 $app->get('/', function() {
 
+	//Função responsável por verificar se o administrador está logado ou não
 	User::verifyLogin();
+
+	// Instancia da classe que recebe a classe TPL
 
 	$page = new PageAdmin();
 
+	// setTPL é responsável por desenhar a página
 	$page->setTpl("index",[
 		"funcionarios" => User::getTotFuncs(),
 		"entradas" => User::getTotEntradas(),
@@ -26,10 +32,12 @@ $app->get('/', function() {
 
 });
 
+// Rotas administrador
+
 
 $app->get("/admin/login/", function(){
 
-	$page = new PageAdmin([
+	$page = new PageAdmin([ 
 		"header" => false,
 		"footer" => false
 	]);
@@ -111,6 +119,10 @@ $app->get("/admin/perfil/",function(){
 
 });
 
+// Fim das rotas do admin
+
+// Início das rotas do funcionário
+
 $app->get("/admin/funcionarios",function(){
 	User::verifyLogin();
 
@@ -181,9 +193,17 @@ $app->post("/admin/funcionarios",function(){
 $app->get('/admin/funcionario/create/', function() {
 	User::verifyLogin();
 
+	$msgError = "";
+
+	if(isset($_GET['cad']) && $_GET['cad'] == "error"){
+		$msgError = User::setError("Funcionário já cadastrado!");
+	}
 	$page = new PageAdmin();
 
-	$page->setTpl("funcionarios-create");
+	$page->setTpl("funcionarios-create",[
+		"msgError" => User::getError()
+	]);
+
 	exit;
 });
 
@@ -194,10 +214,12 @@ $app->post('/admin/funcionario/create/', function() {
 
 	$user->setData($_POST);
 
-	$user->cadFuncionario();
-
-	header("location: /admin/funcionarios");
-
+	if($user->cadFuncionario()){
+		header("location: /admin/funcionarios");
+	}else{
+		header("location: /admin/funcionario/create/?cad=error");
+	}
+	
 	exit;
 });
 
@@ -281,7 +303,9 @@ $app->get('/admin/funcionario/:iduser/extract', function($idfunc) {
 	
 });
 
+// Fim das rotas de funcionário
 
+// Rotas de movimentação
 
 $app->get("/admin/extracts/listagem",function(){
 	
@@ -399,7 +423,8 @@ $app->post("/admin/extract/create/:idfunc/post",function($idfunc){
 
 });
 
+// Fim das rotas
 
-$app->run();
+$app->run(); // App Run é responsável por executar a rota recebida
 
  ?>

@@ -13,19 +13,7 @@ class User extends Model
 	const ERROR_REGISTER = "UserErrorRegister";
 	const SUCCESS = "UserSucesss";
 
-	public static function getFromSession()
-	{
-
-		$user = new User();
-
-		if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['id'] > 0) {
-
-			$user->setData($_SESSION[User::SESSION]);
-		}
-
-		return $user;
-	}
-
+	// Função responsável por contar quantos funcionários estão cadastrados
 	public static function getTotFuncs(){
 		$sql = new Sql();
 
@@ -34,6 +22,7 @@ class User extends Model
 		return count($results);
 	}
 
+	// Função responsável por contar quantas movimentações do tipo Entrada
 	public static function getTotEntradas(){
 		$sql = new Sql();
 
@@ -42,6 +31,7 @@ class User extends Model
 		return count($results);
 	}
 
+	// Função responsável por contar quantas movimentações do tipo Saída
 	public static function getTotSaidas(){
 		$sql = new Sql();
 
@@ -50,6 +40,9 @@ class User extends Model
 		return count($results);
 	}
 
+	/* Cadastro de movimentações, cadastra na tabela tb_movimentacao e recebe o saldo do funcionário usando uma
+	função especifica para alterar o saldo do mesmo
+	*/
 	public function cadMovimentacao($idfunc)
 	{
 		$sql = new Sql();
@@ -93,6 +86,7 @@ class User extends Model
 		return $results;
 	}
 
+	// Função para atualizar o saldo - Aumenta o saldo
 	public function addToSaldo($saldo, $movimentacao,$idfunc){
 
 		settype($movimentacao, "float");
@@ -113,7 +107,7 @@ class User extends Model
 		return $data;
 
 	}
-
+	// Função para atualizar o saldo - Reduz o saldo
 	public function removeToSaldo($saldo, $movimentacao, $idfunc){
 
 		settype($movimentacao, "float");
@@ -135,6 +129,7 @@ class User extends Model
 
 	}
 
+	// Função exclusiva para o administrador efetuar o login, está função recebe o login -> E-mail e a senha
 	public function login($login, $password)
 	{
 
@@ -172,14 +167,7 @@ class User extends Model
 		session_destroy();
 	}
 
-	public static function listAll()
-	{
-
-		$sql = new Sql();
-
-		return $sql->select("SELECT * FROM tb_funcionario ORDER BY data_criacao DESC");
-	}
-
+	// Função utilizada para verificar se o administrador efetuou login
 	public static function verifyLogin()
 	{	
 		if(!isset($_SESSION['id']) || $_SESSION['id'] == ""){
@@ -189,6 +177,7 @@ class User extends Model
 
 	}
 	
+	// Função que busca todas as informações sobre o administrador
 	public function getInfoAdmin($idadmin)
 	{
 		$sql = new Sql();
@@ -200,13 +189,19 @@ class User extends Model
 		return $this->setData($results[0]);
 	}
 
+	// Função responsável por cadastrar um novo funcionário caso ainda não seja cadastrado
 	public function cadFuncionario()
 	{
 
 		$sql = new Sql();
 
-		// 	echo json_encode($_POST);
-		$results = $sql->select("INSERT INTO tb_funcionario (nome_completo,login,senha,saldo_atual,administrador_id) VALUES (:fullname, :login, :senha , :saldoAtual , :adminId)", array(
+		$data = $sql->select("SELECT login FROM tb_funcionario WHERE login = :LOGIN", array(
+			":LOGIN" => $this->getlogin()
+		));
+
+		if(count($data) == 0){
+			// 	echo json_encode($_POST);
+			$results = $sql->select("INSERT INTO tb_funcionario (nome_completo,login,senha,saldo_atual,administrador_id) VALUES (:fullname, :login, :senha , :saldoAtual , :adminId)", array(
 			":fullname" => $this->getnome_completo(),
 			":login" => $this->getlogin(),
 			":senha" => md5($this->getsenha()),
@@ -215,8 +210,13 @@ class User extends Model
 		));
 
 		return true;
+
+		}else{
+			return false;
+		}
 	}
 
+	// Função responsável por cadastrar um novo administrador
 	public function saveAdmin($fullname, $login, $password)
 	{
 
@@ -231,6 +231,7 @@ class User extends Model
 		return true;
 	}
 
+	// Função que busca todos os dados de um funcionário pelo seu id
 	public function get($iduser)
 	{
 
@@ -248,6 +249,7 @@ class User extends Model
 		$this->setData($data);
 	}
 
+	// Função que atualiza os dados do funcionário
 	public function update($idfunc)
 	{
 
@@ -267,6 +269,7 @@ class User extends Model
 		return $results;
 	}
 
+	// Função que deleta um funcionário pelo seu id
 	public static function delete($idfunc)
 	{
 
@@ -279,21 +282,7 @@ class User extends Model
 		return true;
 	}
 
-	public function getExtratos($idfunc)
-	{
-		$sql = new Sql();
-
-		$results = $sql->select("SELECT * FROM tb_movimentacao WHERE funcionario_id = :ID", array(
-			":ID" => $idfunc
-		));
-
-		if (count($results) > 0) {
-			$this->setData($results[0]);
-		} else {
-			User::setError("Nenhuma movimentacao encontrada");
-		}
-	}
-
+	// Paginação das movimentações de um funcionário específico
 	public static function getPageExtractFromId($page = 1, $idfunc, $itemsPerPage = 5)
 	{
 
@@ -319,6 +308,7 @@ class User extends Model
 		];
 	}
 
+	// Função que lista todos os extrados da tabela tb_movimentacao
 	public static function getPageExtract($page = 1, $itemsPerPage = 5)
 	{
 
@@ -344,6 +334,7 @@ class User extends Model
 		];
 	}
 
+	// função que lista todos os registros da tabela com base no filtro
 	public static function getPageExtractSearch($tipo,$nome,$data, $page = 1, $itemsPerPage = 5)
 	{
 
@@ -376,12 +367,14 @@ class User extends Model
 
 	}
 
+	// Função que salva a mensagem de erro
 	public static function setError($msg)
 	{
 
 		$_SESSION[User::ERROR] = $msg;
 	}
 
+	// Função que pega a mensagem de erro
 	public static function getError()
 	{
 
@@ -392,18 +385,20 @@ class User extends Model
 		return $msg;
 	}
 
+	// Função que limpa a mensagem de erro
 	public static function clearError()
 	{
 
 		$_SESSION[User::ERROR] = NULL;
 	}
 
+	// Função que salva a mensagem de sucesso
 	public static function setSuccess($msg)
 	{
 
 		$_SESSION[User::SUCCESS] = $msg;
 	}
-
+	// Função que pega a mensagem de sucesso
 	public static function getSuccess()
 	{
 
@@ -413,19 +408,20 @@ class User extends Model
 
 		return $msg;
 	}
-
+	// Função que limpa a mensagem de sucesso
 	public static function clearSuccess()
 	{
 
 		$_SESSION[User::SUCCESS] = NULL;
 	}
 
+	// Função que salva e registra a mensagem de erro
 	public static function setErrorRegister($msg)
 	{
 
 		$_SESSION[User::ERROR_REGISTER] = $msg;
 	}
-
+	// Função que pega a mensagem de erro registrada
 	public static function getErrorRegister()
 	{
 
@@ -436,12 +432,14 @@ class User extends Model
 		return $msg;
 	}
 
+	// Função que limpa a mensagem de erro registrada
 	public static function clearErrorRegister()
 	{
 
 		$_SESSION[User::ERROR_REGISTER] = NULL;
 	}
 
+	// Paginação dos funcionários encontrados na tabela tb_funcionario
 	public static function getPage($page = 1, $itemsPerPage = 5)
 	{
 
@@ -464,6 +462,7 @@ class User extends Model
 		];
 	}
 
+	// Paginação que lista os funcionários aplicando um filtro
 	public static function getPageSearch($search,$data ,$page = 1, $itemsPerPage = 5)
 	{
 

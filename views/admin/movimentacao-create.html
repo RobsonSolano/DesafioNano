@@ -20,10 +20,11 @@
                     </button> {$msgSuccess}
                 </div>
                 {/if}
+                <!-- Formulário para cadastro de despesa -->
                 <form role="form" action="/admin/extract/create/{$id_func}/post" method="post">
                     <div class="box-body">
                         <div class="form-group">
-                            <select name="tipo_movimentacao" id="tipo_movimentacao" class="form-control">
+                            <select name="tipo_movimentacao" id="tipo_movimentacao" required class="form-control">
                                 <option disabled selected class="form-control">Tipo
                                     da movimentação</option>
                                 <option value="entrada" class="form-control">Entrada</option>
@@ -32,11 +33,11 @@
                         </div>
                         <div class="form-group">
                             <label for="valor">Valor</label>
-                            <input type="text" min="0" class="form-control" id="valor" name="valor" placeholder="Digite o valor">
+                            <input type="text" min="0" class="form-control" required id="valor" name="valor" placeholder="Digite o valor: 0.00">
                         </div>
                         <div class="form-group">
                             <label for="observacao">Observação</label>
-                            <textarea class="form-control" id="observacao" name="observacao" placeholder=""></textarea>
+                            <textarea class="form-control" id="observacao" required name="observacao" placeholder=""></textarea>
                         </div>
                         <input type="hidden" name="funcionario_id" value="{$id_func}">
                         <input type="hidden" name="administrador_id" value="{$id_admin}">
@@ -45,6 +46,7 @@
                         <button type="submit" class="btn btn-success">Cadastrar</button>
                     </div>
                 </form>
+                <!-- Fim do formulário -->
             </div>
         </div>
     </div>
